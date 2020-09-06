@@ -44,6 +44,7 @@ int VulkanRenderer::init(GLFWwindow* newWindow)
 		getPhysicalDevice();
 		createLogicalDevice();
 		createSwapChain();
+		createGraphicsPipeline();
 	}
 	catch (const std::runtime_error& e)
 	{
@@ -240,6 +241,32 @@ void VulkanRenderer::createSwapChain()
 
 		swapChainImages.push_back(swapChainImage);
 	}
+}
+
+void VulkanRenderer::createGraphicsPipeline()
+{
+	const auto vertexShaderCode = readFile("shaders/shader.vert.spv");
+	const auto fragmentShaderCode = readFile("shaders/shader.frag.spv");
+
+	const auto vertexShaderModule = createShaderModule(vertexShaderCode);
+	const auto fragmentShaderModule = createShaderModule(fragmentShaderCode);
+
+	VkPipelineShaderStageCreateInfo vertexShaderCreateInfo = {};
+	vertexShaderCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+	vertexShaderCreateInfo.stage = VK_SHADER_STAGE_VERTEX_BIT;
+	vertexShaderCreateInfo.module = vertexShaderModule;
+	vertexShaderCreateInfo.pName = "main";
+
+	VkPipelineShaderStageCreateInfo fragmentShaderCreateInfo = {};
+	fragmentShaderCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+	fragmentShaderCreateInfo.stage = VK_SHADER_STAGE_FRAGMENT_BIT;
+	fragmentShaderCreateInfo.module = fragmentShaderModule;
+	fragmentShaderCreateInfo.pName = "main";
+
+	VkPipelineShaderStageCreateInfo shaderStages[] = { vertexShaderCreateInfo, fragmentShaderCreateInfo };
+
+	vkDestroyShaderModule(mainDevice.logicalDevice, fragmentShaderModule, nullptr);
+	vkDestroyShaderModule(mainDevice.logicalDevice, vertexShaderModule, nullptr);
 }
 
 void VulkanRenderer::getPhysicalDevice()
@@ -499,6 +526,21 @@ VkImageView VulkanRenderer::createImageView(VkImage image, VkFormat format, VkIm
 		throw std::runtime_error{ "Faield to create an image view!" };
 	}
 	return imageView;
+}
+
+VkShaderModule VulkanRenderer::createShaderModule(const std::vector<char>& code)
+{
+	VkShaderModuleCreateInfo shaderModuleCreateInfo = {};
+	shaderModuleCreateInfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
+	shaderModuleCreateInfo.codeSize = code.size();
+	shaderModuleCreateInfo.pCode = reinterpret_cast<const uint32_t*>(code.data());
+
+	VkShaderModule shaderModule;
+	const auto result = vkCreateShaderModule(mainDevice.logicalDevice, &shaderModuleCreateInfo, nullptr, &shaderModule);
+	if (result != VK_SUCCESS) {
+		throw std::runtime_error{ "Failed to create a shader module!" };
+	}
+	return shaderModule;
 }
 
 VkBool32 VulkanRenderer::debugCallback(VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity, VkDebugUtilsMessageTypeFlagsEXT messageType, const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData, void* pUserData)

@@ -8,9 +8,14 @@ add_executable (VulkanProject
 	"main.cpp" 
 	"VulkanRenderer.cpp" "Utilities.h")
 
+add_dependencies(VulkanProject Shaders)
+
 target_link_libraries(VulkanProject PRIVATE 
 	Vulkan::Vulkan
 	CONAN_PKG::glfw
 	CONAN_PKG::glm)
 
-# TODO: Add tests and install targets if needed.
+add_custom_command(TARGET VulkanProject POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E make_directory "$<TARGET_FILE_DIR:VulkanProject>/shaders/"
+    COMMAND ${CMAKE_COMMAND} -E copy_directory "${PROJECT_BINARY_DIR}/shaders" "$<TARGET_FILE_DIR:VulkanProject>/shaders"
+	)

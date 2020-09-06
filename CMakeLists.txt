@@ -3,7 +3,7 @@
 #
 cmake_minimum_required (VERSION 3.8)
 
-project ("VulkanProject")
+project("VulkanProject")
 
 find_package(Vulkan REQUIRED)
 
@@ -11,4 +11,5 @@ include(${CMAKE_BINARY_DIR}/conanbuildinfo.cmake)
 conan_basic_setup(TARGETS)
 
 # Include sub-projects.
-add_subdirectory ("src")
+add_subdirectory("src")
+add_subdirectory("shaders")
