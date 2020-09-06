@@ -51,6 +51,7 @@ int VulkanRenderer::init(GLFWwindow* newWindow)
 		createCommandPool();
 		createCommandBuffers();
 		recordCommands();
+		createSynchronisation();
 	}
 	catch (const std::runtime_error& e)
 	{
@@ -60,8 +61,53 @@ int VulkanRenderer::init(GLFWwindow* newWindow)
 	return 0;
 }
 
+void VulkanRenderer::draw()
+{
+	vkWaitForFences(mainDevice.logicalDevice, 1, &drawFences[currentFrame], VK_TRUE, std::numeric_limits<uint64_t>::max());
+	vkResetFences(mainDevice.logicalDevice, 1, &drawFences[currentFrame]);
+
+	uint32_t imageIndex;
+	vkAcquireNextImageKHR(mainDevice.logicalDevice, swapChain, std::numeric_limits<uint64_t>::max(), imageAvailable[currentFrame], VK_NULL_HANDLE, &imageIndex);
+
+	VkSubmitInfo submitInfo = {};
+	submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+	submitInfo.waitSemaphoreCount = 1;
+	submitInfo.pWaitSemaphores = &imageAvailable[currentFrame];
+	VkPipelineStageFlags waitStages[] = { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
+	submitInfo.pWaitDstStageMask = waitStages;
+	submitInfo.commandBufferCount = 1;
+	submitInfo.pCommandBuffers = &commandBuffers[imageIndex];
+	submitInfo.signalSemaphoreCount = 1;
+	submitInfo.pSignalSemaphores = &renderFinished[currentFrame];
+	auto result = vkQueueSubmit(graphicsQueue, 1, &submitInfo, drawFences[currentFrame]);
+	if (result != VK_SUCCESS) {
+		throw std::runtime_error{ "Failed to submit Command Buffer to Queue!" };
+	}
+
+	VkPresentInfoKHR presentInfo = {};
+	presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
+	presentInfo.waitSemaphoreCount = 1;
+	presentInfo.pWaitSemaphores = &renderFinished[currentFrame];
+	presentInfo.swapchainCount = 1;
+	presentInfo.pSwapchains = &swapChain;
+	presentInfo.pImageIndices = &imageIndex;
+	result = vkQueuePresentKHR(presentationQueue, &presentInfo);
+	if (result != VK_SUCCESS) {
+		throw std::runtime_error{ "Failed to present Image!" };
+	}
+
+	currentFrame = (currentFrame + 1) % MAX_FRAME_DRAWS;
+}
+
 void VulkanRenderer::cleanup()
 {
+	vkDeviceWaitIdle(mainDevice.logicalDevice);
+
+	for (auto i = 0; i < MAX_FRAME_DRAWS; ++i) {
+		vkDestroySemaphore(mainDevice.logicalDevice, renderFinished[i], nullptr);
+		vkDestroySemaphore(mainDevice.logicalDevice, imageAvailable[i], nullptr);
+		vkDestroyFence(mainDevice.logicalDevice, drawFences[i], nullptr);
+	}
 	vkDestroyCommandPool(mainDevice.logicalDevice, graphicsCommandPool, nullptr);
 	for (const auto& framebuffer : swapChainFramebuffers) {
 		vkDestroyFramebuffer(mainDevice.logicalDevice, framebuffer, nullptr);
@@ -155,14 +201,14 @@ void VulkanRenderer::createLogicalDevice()
 	std::vector<VkDeviceQueueCreateInfo> queueCreateInfos;
 	std::set<int> queueFamilyIndices{ indices.graphicsFamily, indices.presentationFamily };
 	for (const auto& queueFamilyIndex : queueFamilyIndices) {
-	VkDeviceQueueCreateInfo queueCreateInfo = {};
-	queueCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
-	queueCreateInfo.queueFamilyIndex = queueFamilyIndex;
-	queueCreateInfo.queueCount = 1;
-	auto priority = 1.0f;
-	queueCreateInfo.pQueuePriorities = &priority;
+		VkDeviceQueueCreateInfo queueCreateInfo = {};
+		queueCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
+		queueCreateInfo.queueFamilyIndex = queueFamilyIndex;
+		queueCreateInfo.queueCount = 1;
+		auto priority = 1.0f;
+		queueCreateInfo.pQueuePriorities = &priority;
 
-	queueCreateInfos.push_back(queueCreateInfo);
+		queueCreateInfos.push_back(queueCreateInfo);
 	}
 
 	VkDeviceCreateInfo deviceCreateInfo = {};
@@ -181,7 +227,7 @@ void VulkanRenderer::createLogicalDevice()
 	}
 
 	vkGetDeviceQueue(mainDevice.logicalDevice, indices.graphicsFamily, 0, &graphicsQueue);
-	vkGetDeviceQueue(mainDevice.logicalDevice, indices.presentationFamily, 0, &graphicsQueue);
+	vkGetDeviceQueue(mainDevice.logicalDevice, indices.presentationFamily, 0, &presentationQueue);
 }
 
 void VulkanRenderer::createSurface()
@@ -352,7 +398,7 @@ void VulkanRenderer::createGraphicsPipeline()
 	viewport.maxDepth = 1.0f;
 
 	VkRect2D scissor = {};
-	scissor.offset = { 0,0};
+	scissor.offset = { 0,0 };
 	scissor.extent = swapChainExtent;
 
 	VkPipelineViewportStateCreateInfo viewportStateCreateInfo = {};
@@ -498,7 +544,6 @@ void VulkanRenderer::recordCommands()
 {
 	VkCommandBufferBeginInfo bufferBeginInfo = {};
 	bufferBeginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-	bufferBeginInfo.flags = VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT;
 
 	VkRenderPassBeginInfo renderPassBeginInfo = {};
 	renderPassBeginInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
@@ -508,7 +553,7 @@ void VulkanRenderer::recordCommands()
 	VkClearValue clearValues[]{ {0.6f, 0.65f, 0.4f, 1.0f} };
 	renderPassBeginInfo.clearValueCount = 1;
 	renderPassBeginInfo.pClearValues = clearValues;
-	
+
 	for (auto i = 0u; i < commandBuffers.size(); ++i) {
 		renderPassBeginInfo.framebuffer = swapChainFramebuffers[i];
 
@@ -527,6 +572,28 @@ void VulkanRenderer::recordCommands()
 		result = vkEndCommandBuffer(commandBuffers[i]);
 		if (result != VK_SUCCESS) {
 			throw std::runtime_error{ "Failed to stop recording a Command Buffer!" };
+		}
+	}
+}
+
+void VulkanRenderer::createSynchronisation()
+{
+	imageAvailable.resize(MAX_FRAME_DRAWS);
+	renderFinished.resize(MAX_FRAME_DRAWS);
+	drawFences.resize(MAX_FRAME_DRAWS);
+
+	VkSemaphoreCreateInfo semaphoreCreateInfo = {};
+	semaphoreCreateInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
+
+	VkFenceCreateInfo fenceCreateInfo = {};
+	fenceCreateInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
+	fenceCreateInfo.flags = VK_FENCE_CREATE_SIGNALED_BIT;
+
+	for (auto i = 0; i < MAX_FRAME_DRAWS; ++i) {
+		if ((vkCreateSemaphore(mainDevice.logicalDevice, &semaphoreCreateInfo, nullptr, &imageAvailable[i]) != VK_SUCCESS) ||
+			(vkCreateSemaphore(mainDevice.logicalDevice, &semaphoreCreateInfo, nullptr, &renderFinished[i]) != VK_SUCCESS) ||
+			(vkCreateFence(mainDevice.logicalDevice, &fenceCreateInfo, nullptr, &drawFences[i]) != VK_SUCCESS)) {
+			throw std::runtime_error{ "Failed to create Semaphores and/or Fence!" };
 		}
 	}
 }
@@ -646,8 +713,8 @@ bool VulkanRenderer::checkDeviceSuitable(VkPhysicalDevice device)
 
 	bool swapChainValid = false;
 	if (extensionsSupported) {
-	const auto swapChainDetails = getSwapChainDetails(device);
-	swapChainValid = !swapChainDetails.presentationModes.empty() && !swapChainDetails.formats.empty();
+		const auto swapChainDetails = getSwapChainDetails(device);
+		swapChainValid = !swapChainDetails.presentationModes.empty() && !swapChainDetails.formats.empty();
 	}
 
 	return indices.isValid() && extensionsSupported && swapChainValid;

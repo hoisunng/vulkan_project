@@ -10,10 +10,13 @@
 class VulkanRenderer {
 public:
 	int init(GLFWwindow* newWindow);
+	void draw();
 	void cleanup();
 
 private:
 	GLFWwindow* window;
+
+	int currentFrame = 0;
 
 	VkInstance instance;
 	VkDebugUtilsMessengerEXT debugMessenger;
@@ -38,6 +41,10 @@ private:
 	VkFormat swapChainImageFormat;
 	VkExtent2D swapChainExtent;
 
+	std::vector<VkSemaphore> imageAvailable;
+	std::vector<VkSemaphore> renderFinished;
+	std::vector<VkFence> drawFences;
+
 	void createInstance();
 	void setupDebugMessenger();
 	void createLogicalDevice();
@@ -49,6 +56,7 @@ private:
 	void createCommandPool();
 	void createCommandBuffers();
 	void recordCommands();
+	void createSynchronisation();
 	void getPhysicalDevice();
 
 	bool checkInstanceExtensionSupport(const std::vector<const char*>& checkExtensions);
