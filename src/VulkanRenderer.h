@@ -6,6 +6,7 @@
 #include <vector>
 #include <set>
 #include "Utilities.h"
+#include "Mesh.h"
 
 class VulkanRenderer {
 public:
@@ -17,6 +18,8 @@ private:
 	GLFWwindow* window;
 
 	int currentFrame = 0;
+
+	std::vector<Mesh> meshList;
 
 	VkInstance instance;
 	VkDebugUtilsMessengerEXT debugMessenger;

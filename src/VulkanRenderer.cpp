@@ -49,6 +49,29 @@ int VulkanRenderer::init(GLFWwindow* newWindow)
 		createGraphicsPipeline();
 		createFramebuffers();
 		createCommandPool();
+
+		std::vector<Vertex> meshVertices = {
+			{{-0.1, -0.4, 0.0}, {1.0f, 0.0f,0.0f}},
+			{{-0.1, 0.4, 0.0}, {0.0f, 1.0f,0.0f}},
+			{{-0.9, 0.4, 0.0}, {0.0f, 0.0f,1.0f}},
+			{{-0.9, -0.4, 0.0}, {1.0f, 1.0f,0.0f}},
+		};
+		std::vector<Vertex> meshVertices2 = {
+			{{0.9, -0.3, 0.0}, {1.0f, 0.0f,0.0f}},
+			{{0.9, 0.1, 0.0}, {0.0f, 1.0f,0.0f}},
+			{{0.1, 0.3, 0.0}, {0.0f, 0.0f,1.0f}},
+			{{0.1, -0.3, 0.0}, {1.0f, 1.0f,0.0f}},
+		};
+		std::vector<uint32_t> meshIndices = {
+			0, 1, 2,
+			2, 3, 0
+		};
+		auto firstMesh = Mesh(mainDevice.physicalDevice, mainDevice.logicalDevice, graphicsQueue, graphicsCommandPool, &meshVertices, &meshIndices);
+		auto secondMesh = Mesh(mainDevice.physicalDevice, mainDevice.logicalDevice, graphicsQueue, graphicsCommandPool, &meshVertices2, &meshIndices);
+
+		meshList.push_back(firstMesh);
+		meshList.push_back(secondMesh);
+
 		createCommandBuffers();
 		recordCommands();
 		createSynchronisation();
@@ -103,6 +126,9 @@ void VulkanRenderer::cleanup()
 {
 	vkDeviceWaitIdle(mainDevice.logicalDevice);
 
+	for (auto i = 0u; i < meshList.size(); ++i) {
+		meshList[i].destroyBuffers();
+	}
 	for (auto i = 0; i < MAX_FRAME_DRAWS; ++i) {
 		vkDestroySemaphore(mainDevice.logicalDevice, renderFinished[i], nullptr);
 		vkDestroySemaphore(mainDevice.logicalDevice, imageAvailable[i], nullptr);
@@ -377,12 +403,27 @@ void VulkanRenderer::createGraphicsPipeline()
 
 	VkPipelineShaderStageCreateInfo shaderStages[] = { vertexShaderCreateInfo, fragmentShaderCreateInfo };
 
+	VkVertexInputBindingDescription bindingDescription = {};
+	bindingDescription.binding = 0;
+	bindingDescription.stride = sizeof(Vertex);
+	bindingDescription.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
+
+	std::array<VkVertexInputAttributeDescription, 2> attributeDescriptions;
+	attributeDescriptions[0].binding = 0;
+	attributeDescriptions[0].location = 0;
+	attributeDescriptions[0].format = VK_FORMAT_R32G32B32A32_SFLOAT;
+	attributeDescriptions[0].offset = offsetof(Vertex, pos);
+	attributeDescriptions[1].binding = 0;
+	attributeDescriptions[1].location = 1;
+	attributeDescriptions[1].format = VK_FORMAT_R32G32B32A32_SFLOAT;
+	attributeDescriptions[1].offset = offsetof(Vertex, col);
+
 	VkPipelineVertexInputStateCreateInfo vertexInputCreateInfo = {};
 	vertexInputCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
-	vertexInputCreateInfo.vertexBindingDescriptionCount = 0;
-	vertexInputCreateInfo.pVertexBindingDescriptions = nullptr;
-	vertexInputCreateInfo.vertexAttributeDescriptionCount = 0;
-	vertexInputCreateInfo.pVertexAttributeDescriptions = nullptr;
+	vertexInputCreateInfo.vertexBindingDescriptionCount = 1;
+	vertexInputCreateInfo.pVertexBindingDescriptions = &bindingDescription;
+	vertexInputCreateInfo.vertexAttributeDescriptionCount = static_cast<uint32_t>(attributeDescriptions.size());
+	vertexInputCreateInfo.pVertexAttributeDescriptions = attributeDescriptions.data();
 
 	VkPipelineInputAssemblyStateCreateInfo inputAssembly = {};
 	inputAssembly.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
@@ -565,7 +606,16 @@ void VulkanRenderer::recordCommands()
 		vkCmdBeginRenderPass(commandBuffers[i], &renderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
 
 		vkCmdBindPipeline(commandBuffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, graphicsPipeline);
-		vkCmdDraw(commandBuffers[i], 3, 1, 0, 0);
+
+		for (auto j = 0u; j < meshList.size(); ++j) {
+			VkBuffer vertexBuffers[] = { meshList[j].getVertexBuffer() };
+
+			VkDeviceSize offsets[] = { 0 };
+			vkCmdBindVertexBuffers(commandBuffers[i], 0, 1, vertexBuffers, offsets);
+			vkCmdBindIndexBuffer(commandBuffers[i], meshList[j].getIndexBuffer(), 0, VK_INDEX_TYPE_UINT32);
+
+			vkCmdDrawIndexed(commandBuffers[i], static_cast<uint32_t>(meshList[j].getIndexCount()), 1, 0, 0, 0);
+		}
 
 		vkCmdEndRenderPass(commandBuffers[i]);
 
