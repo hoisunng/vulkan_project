@@ -5,11 +5,19 @@
 
 #include <vector>
 #include "Utilities.h"
+#include <glm/glm.hpp>
+
+struct UboModel {
+	glm::mat4 model;
+};
 
 class Mesh {
 public:
 	Mesh() = default;
 	Mesh(VkPhysicalDevice newPhysicalDevice, VkDevice newDevice, VkQueue transferQueue, VkCommandPool transferCommandPool, std::vector<Vertex>* vertices, std::vector<uint32_t>* indices);
+
+	void setModel(glm::mat4 newModel);
+	UboModel getModel() const;
 
 	int getVertexCount() const;
 	VkBuffer getVertexBuffer() const;
@@ -19,6 +27,8 @@ public:
 	void destroyBuffers();
 
 private:
+	UboModel uboModel;
+
 	int vertexCount;
 	VkBuffer vertexBuffer;
 	VkDeviceMemory vertexBufferMemory;

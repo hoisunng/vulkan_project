@@ -7,10 +7,14 @@
 #include <set>
 #include "Utilities.h"
 #include "Mesh.h"
+#include <glm/mat4x4.hpp>
 
 class VulkanRenderer {
 public:
 	int init(GLFWwindow* newWindow);
+
+	void updateModel(int modelId, glm::mat4 newModel);
+
 	void draw();
 	void cleanup();
 
@@ -20,6 +24,11 @@ private:
 	int currentFrame = 0;
 
 	std::vector<Mesh> meshList;
+
+	struct UboViewProjection {
+		glm::mat4 projection;
+		glm::mat4 view;
+	} uboViewProjection;
 
 	VkInstance instance;
 	VkDebugUtilsMessengerEXT debugMessenger;
@@ -34,6 +43,19 @@ private:
 	std::vector<SwapChainImage> swapChainImages;
 	std::vector<VkFramebuffer> swapChainFramebuffers;
 	std::vector<VkCommandBuffer> commandBuffers;
+
+	VkDescriptorSetLayout descriptorSetLayout;
+	VkDescriptorPool descriptorPool;
+	std::vector<VkDescriptorSet> descriptorSets;
+
+	std::vector<VkBuffer> vpUniformBuffer;
+	std::vector<VkDeviceMemory> vpUniformBufferMemory;
+	std::vector<VkBuffer> modelDUniformBuffer;
+	std::vector<VkDeviceMemory> modelDUniformBufferMemory;
+
+	VkDeviceSize minUniformBufferOffset;
+	size_t modelUniformAlignment;
+	UboModel* modelTransferSpace;
 
 	VkPipeline graphicsPipeline;
 	VkPipelineLayout pipelineLayout;
@@ -54,13 +76,22 @@ private:
 	void createSurface();
 	void createSwapChain();
 	void createRenderPass();
+	void createDescriptorSetLayout();
 	void createGraphicsPipeline();
 	void createFramebuffers();
 	void createCommandPool();
 	void createCommandBuffers();
 	void recordCommands();
 	void createSynchronisation();
+	void createUniformBuffers();
+	void createDescriptorPool();
+	void createDescriptorSets();
+
+	void updateUniformBuffers(uint32_t imageIndex);
+
 	void getPhysicalDevice();
+
+	void allocateDynamicBufferTransferSpace();
 
 	bool checkInstanceExtensionSupport(const std::vector<const char*>& checkExtensions);
 	bool checkDeviceExtensionSupport(VkPhysicalDevice device);
