@@ -14,10 +14,12 @@ struct Model {
 class Mesh {
 public:
 	Mesh() = default;
-	Mesh(VkPhysicalDevice newPhysicalDevice, VkDevice newDevice, VkQueue transferQueue, VkCommandPool transferCommandPool, std::vector<Vertex>* vertices, std::vector<uint32_t>* indices);
+	Mesh(VkPhysicalDevice newPhysicalDevice, VkDevice newDevice, VkQueue transferQueue, VkCommandPool transferCommandPool, std::vector<Vertex>* vertices, std::vector<uint32_t>* indices, int newTexId);
 
 	void setModel(glm::mat4 newModel);
 	Model getModel() const;
+
+	int getTexId() const;
 
 	int getVertexCount() const;
 	VkBuffer getVertexBuffer() const;
@@ -28,6 +30,7 @@ public:
 
 private:
 	Model model;
+	int texId;
 
 	int vertexCount;
 	VkBuffer vertexBuffer;

@@ -8,6 +8,7 @@
 #include "Utilities.h"
 #include "Mesh.h"
 #include <glm/mat4x4.hpp>
+#include <stb_image.h>
 
 class VulkanRenderer {
 public:
@@ -48,10 +49,15 @@ private:
 	VkDeviceMemory depthBufferImageMemory;
 	VkImageView depthBufferImageView;
 
+	VkSampler textureSampler;
+
 	VkDescriptorSetLayout descriptorSetLayout;
+	VkDescriptorSetLayout samplerSetLayout;
 	VkPushConstantRange pushConstantRange;
 	VkDescriptorPool descriptorPool;
+	VkDescriptorPool samplerDescriptorPool;
 	std::vector<VkDescriptorSet> descriptorSets;
+	std::vector<VkDescriptorSet> samplerDescriptorSets;
 
 	std::vector<VkBuffer> vpUniformBuffer;
 	std::vector<VkDeviceMemory> vpUniformBufferMemory;
@@ -61,6 +67,10 @@ private:
 	//VkDeviceSize minUniformBufferOffset;
 	//size_t modelUniformAlignment;
 	//Model* modelTransferSpace;
+
+	std::vector<VkImage> textureImages;
+	std::vector<VkDeviceMemory> textureImageMemory;
+	std::vector<VkImageView> textureImageViews;
 
 	VkPipeline graphicsPipeline;
 	VkPipelineLayout pipelineLayout;
@@ -90,6 +100,7 @@ private:
 	void createCommandBuffers();
 	void recordCommands(uint32_t currentImage);
 	void createSynchronisation();
+	void createTextureSampler();
 	void createUniformBuffers();
 	void createDescriptorPool();
 	void createDescriptorSets();
@@ -117,6 +128,12 @@ private:
 	VkImage createImage(uint32_t width, uint32_t height, VkFormat format, VkImageTiling tiling, VkImageUsageFlags useFlags, VkMemoryPropertyFlags propFlags, VkDeviceMemory *imageMemory);
 	VkImageView createImageView(VkImage image, VkFormat format, VkImageAspectFlags aspectFlags);
 	VkShaderModule createShaderModule(const std::vector<char>& code);
+
+	int createTextureImage(const std::string& fileName);
+	int createTexture(const std::string& fileName);
+	int createTextureDescriptor(VkImageView textureImage);
+
+	stbi_uc* loadTextureFile(const std::string& fileName, int* width, int* height, VkDeviceSize* imageSize);
 
 	static VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(
 		VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,

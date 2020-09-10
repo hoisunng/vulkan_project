@@ -14,9 +14,12 @@ add_dependencies(VulkanProject Shaders)
 target_link_libraries(VulkanProject PRIVATE 
 	Vulkan::Vulkan
 	CONAN_PKG::glfw
-	CONAN_PKG::glm)
+	CONAN_PKG::glm
+	CONAN_PKG::stb)
 
 add_custom_command(TARGET VulkanProject POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E make_directory "$<TARGET_FILE_DIR:VulkanProject>/shaders/"
     COMMAND ${CMAKE_COMMAND} -E copy_directory "${PROJECT_BINARY_DIR}/shaders" "$<TARGET_FILE_DIR:VulkanProject>/shaders"
+    COMMAND ${CMAKE_COMMAND} -E make_directory "$<TARGET_FILE_DIR:VulkanProject>/textures/"
+    COMMAND ${CMAKE_COMMAND} -E copy_directory "${CMAKE_SOURCE_DIR}/textures" "$<TARGET_FILE_DIR:VulkanProject>/textures"
 	)
