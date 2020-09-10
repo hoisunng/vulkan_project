@@ -2,6 +2,7 @@
 glfw/3.3.2
 glm/0.9.9.8
 stb/20190512@conan/stable
+assimp/5.0.1
 
 [generators]
 cmake

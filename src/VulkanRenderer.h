@@ -7,6 +7,7 @@
 #include <set>
 #include "Utilities.h"
 #include "Mesh.h"
+#include "MeshModel.h"
 #include <glm/mat4x4.hpp>
 #include <stb_image.h>
 
@@ -14,6 +15,7 @@ class VulkanRenderer {
 public:
 	int init(GLFWwindow* newWindow);
 
+	int createMeshModel(const std::string& modelFile);
 	void updateModel(int modelId, glm::mat4 newModel);
 
 	void draw();
@@ -24,7 +26,7 @@ private:
 
 	int currentFrame = 0;
 
-	std::vector<Mesh> meshList;
+	std::vector<MeshModel> modelList;
 
 	struct UboViewProjection {
 		glm::mat4 projection;
@@ -67,6 +69,7 @@ private:
 	//VkDeviceSize minUniformBufferOffset;
 	//size_t modelUniformAlignment;
 	//Model* modelTransferSpace;
+
 
 	std::vector<VkImage> textureImages;
 	std::vector<VkDeviceMemory> textureImageMemory;

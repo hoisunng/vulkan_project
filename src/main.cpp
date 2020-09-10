@@ -36,6 +36,8 @@ int main()
 	auto deltaTime = 0.0f;
 	auto lastTime = 0.0f;
 
+	auto spaceship = vulkanRenderer.createMeshModel("models/Intergalactic_Spaceship-(Wavefront).obj");
+
 	while (!glfwWindowShouldClose(window)) {
 		glfwPollEvents();
 
@@ -48,15 +50,8 @@ int main()
 			angle -= 360.0f;
 		}
 
-		glm::mat4 firstModel{ 1.0f };
-		firstModel = glm::translate(firstModel, glm::vec3{ 0.0f, 0.0f, -2.5f });
-		firstModel = glm::rotate(firstModel, glm::radians(angle), glm::vec3{ 0.0f, 0.0f, 1.0f });
-		vulkanRenderer.updateModel(0, firstModel);
-
-		glm::mat4 secondModel{ 1.0f };
-		secondModel = glm::translate(secondModel, glm::vec3{ 0.0f, 0.0f, -3.0f });
-		secondModel = glm::rotate(secondModel, glm::radians(-angle * 10), glm::vec3{ 0.0f, 0.0f, 1.0f });
-		vulkanRenderer.updateModel(1, secondModel);
+		glm::mat4 testMat = glm::rotate(glm::mat4{ 1.0f }, glm::radians(angle), glm::vec3{ 0.0f, 1.0f, 0.0f });
+		vulkanRenderer.updateModel(spaceship, testMat);
 
 		vulkanRenderer.draw();
 	}
