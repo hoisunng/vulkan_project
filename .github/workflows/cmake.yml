@@ -40,6 +40,7 @@ jobs:
       shell: bash
       run: |
         export VULKAN_SDK="${{env.VULKAN_SDK_PATH}}/${{env.VULKAN_VERSION}}/x86_64"
+        conan install $GITHUB_WORKSPACE -if ${{runner.workspace}}/build
         cmake \
           -S$GITHUB_WORKSPACE \
           -B${{runner.workspace}}/build \
