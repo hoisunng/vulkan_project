@@ -6,7 +6,7 @@ env:
   # Customize the CMake build type here (Release, Debug, RelWithDebInfo, etc.)
   BUILD_TYPE: Release
   VULKAN_VERSION: 1.2.154.0
-  VULKAN_SDK_PATH: "vulkan_sdk"
+  VULKAN_SDK_PATH: "${{runner.workspace}}/vulkan_sdk"
 
 jobs:
   build:
@@ -22,7 +22,7 @@ jobs:
     - name: Prepare build environment
       shell: bash
       run: |
-        apt install -y ninja-build
+        sudo apt install -y ninja-build
 
     - name: Install Vulkan
       run: |
@@ -40,12 +40,12 @@ jobs:
       run: |
         export VULKAN_SDK="${{env.VULKAN_SDK_PATH}}/${{env.VULKAN_VERSION}}/x86_64"
         cmake \
-          -S$GITHUB_WORKSPACE
-          -Bbuild \
+          -S$GITHUB_WORKSPACE \
+          -B${{runner.workspace}}/build \
           -GNinja \
           -DCMAKE_BUILD_TYPE=$BUILD_TYPE
 
     - name: Build
       shell: bash
       # Execute the build.  You can specify a specific target with "--target <NAME>"
-      run: cmake --build build
+      run: cmake --build ${{runner.workspace}}/build
