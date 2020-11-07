@@ -22,7 +22,7 @@ jobs:
     - name: Prepare build environment
       shell: bash
       run: |
-        sudo apt install -y ninja-build libgl-dev
+        sudo apt install -y ninja-build libgl-dev xorg-dev
         sudo pip install conan
         
         # Tell Conan to use CXX11 ABI
