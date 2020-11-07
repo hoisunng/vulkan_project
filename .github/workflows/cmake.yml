@@ -23,6 +23,7 @@ jobs:
       shell: bash
       run: |
         sudo apt install -y ninja-build
+        sudo pip install conan
 
     - name: Install Vulkan
       run: |
