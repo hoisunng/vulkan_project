@@ -22,7 +22,10 @@ jobs:
     - name: Prepare build environment
       shell: bash
       run: |
-        sudo apt install -y ninja-build libgl-dev xorg-dev \
+        sudo apt install -y
+          ninja-build \
+          libgl-dev \
+          xorg-dev \
           libx11-dev \
           libx11-xcb-dev \
           libxcb-icccm4-dev \
@@ -37,7 +40,7 @@ jobs:
           libxcb-xinerama0-dev \
           libxcb-xkb-dev
 
-        sudo pip install conan
+        sudo pip3 install conan
         
         # Tell Conan to use CXX11 ABI
         conan profile new default --detect
@@ -58,7 +61,6 @@ jobs:
       shell: bash
       run: |
         export VULKAN_SDK="${{env.VULKAN_SDK_PATH}}/${{env.VULKAN_VERSION}}/x86_64"
-        conan install $GITHUB_WORKSPACE -if ${{runner.workspace}}/build
         cmake \
           -S$GITHUB_WORKSPACE \
           -B${{runner.workspace}}/build \
