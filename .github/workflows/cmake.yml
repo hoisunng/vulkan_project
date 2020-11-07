@@ -22,8 +22,12 @@ jobs:
     - name: Prepare build environment
       shell: bash
       run: |
-        sudo apt install -y ninja-build
+        sudo apt install -y ninja-build libgl-dev
         sudo pip install conan
+        
+        # Tell Conan to use CXX11 ABI
+        conan profile new default --detect
+        conan profile update settings.compiler.libcxx=libstdc++11 default
 
     - name: Install Vulkan
       run: |
