@@ -1,6 +1,6 @@
 name: CMake
 
-on: [push]
+on: [push,pull_request]
 
 env:
   # Customize the CMake build type here (Release, Debug, RelWithDebInfo, etc.)
@@ -22,7 +22,7 @@ jobs:
     - name: Prepare build environment
       shell: bash
       run: |
-        sudo apt install -y
+        sudo apt-get install -y \
           ninja-build \
           libgl-dev \
           xorg-dev \
