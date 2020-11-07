@@ -6,7 +6,7 @@ env:
   # Customize the CMake build type here (Release, Debug, RelWithDebInfo, etc.)
   BUILD_TYPE: Release
   VULKAN_VERSION: 1.2.154.0
-  VULKAN_SDK_PATH: "$GITHUB_WORKSPACE/vulkan_sdk"
+  VULKAN_SDK_PATH: "vulkan_sdk"
 
 jobs:
   build:
@@ -14,22 +14,15 @@ jobs:
     # well on Windows or Mac.  You can convert this to a matrix build if you need
     # cross-platform coverage.
     # See: https://docs.github.com/en/free-pro-team@latest/actions/learn-github-actions/managing-complex-workflows#using-a-build-matrix
-    runs-on: ubuntu-latest
-    container: ubuntu:20.04
+    runs-on: ubuntu-20.04
 
     steps:
     - uses: actions/checkout@v2
 
-    - name: Update environment
+    - name: Prepare build environment
       shell: bash
       run: |
-        # Update package lists
-        apt update -qq
-        # Install build tools
-        apt install -y \
-          cmake \
-          curl \
-          ninja-build
+        apt install -y ninja-build
 
     - name: Install Vulkan
       run: |
@@ -46,7 +39,8 @@ jobs:
       shell: bash
       run: |
         export VULKAN_SDK="${{env.VULKAN_SDK_PATH}}/${{env.VULKAN_VERSION}}/x86_64"
-        cmake . \
+        cmake \
+          -S$GITHUB_WORKSPACE
           -Bbuild \
           -GNinja \
           -DCMAKE_BUILD_TYPE=$BUILD_TYPE
