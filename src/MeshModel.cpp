@@ -16,7 +16,7 @@ const Mesh* MeshModel::getMesh(size_t index) const
 	return &meshList.at(index);
 }
 
-glm::mat4 MeshModel::getModel() const
+const glm::mat4& MeshModel::getModel() const
 {
 	return model;
 }

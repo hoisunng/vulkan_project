@@ -1,4 +1,5 @@
 #include "Mesh.h"
+#include <cstring>
 
 Mesh::Mesh(VkPhysicalDevice newPhysicalDevice, VkDevice newDevice, VkQueue transferQueue, VkCommandPool transferCommandPool, std::vector<Vertex>* vertices, std::vector<uint32_t>* indices, int newTexId)
 {
@@ -67,7 +68,7 @@ void Mesh::createVertexBuffer(VkQueue transferQueue, VkCommandPool transferComma
 
 	void* data;
 	vkMapMemory(device, stagingBufferMemory, 0, bufferSize, 0, &data);
-	memcpy(data, vertices->data(), static_cast<size_t>(bufferSize));
+	std::memcpy(data, vertices->data(), static_cast<size_t>(bufferSize));
 	vkUnmapMemory(device, stagingBufferMemory);
 
 	createBuffer(physicalDevice, device, bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, &vertexBuffer, &vertexBufferMemory);
@@ -89,7 +90,7 @@ void Mesh::createIndexBuffer(VkQueue transferQueue, VkCommandPool transferComman
 
 	void* data;
 	vkMapMemory(device, stagingBufferMemory, 0, bufferSize, 0, &data);
-	memcpy(data, indices->data(), static_cast<size_t>(bufferSize));
+	std::memcpy(data, indices->data(), static_cast<size_t>(bufferSize));
 	vkUnmapMemory(device, stagingBufferMemory);
 
 	createBuffer(physicalDevice, device, bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, &indexBuffer, &indexBufferMemory);

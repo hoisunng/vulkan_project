@@ -1,9 +1,8 @@
 cmake_minimum_required (VERSION 3.8)
 
-if (${CMAKE_HOST_SYSTEM_PROCESSOR} STREQUAL "AMD64")
-  set(GLSL_VALIDATOR "$ENV{VULKAN_SDK}/Bin/glslangValidator.exe")
-else()
-  set(GLSL_VALIDATOR "$ENV{VULKAN_SDK}/Bin32/glslangValidator.exe")
+find_program(GLSL_VALIDATOR glslangValidator REQUIRED)
+if(NOT GLSL_VALIDATOR)
+  message(FATAL_ERROR "glslangValidator not found!")
 endif()
 
 file(GLOB_RECURSE GLSL_SOURCE_FILES

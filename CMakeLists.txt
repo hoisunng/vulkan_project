@@ -7,8 +7,7 @@ project("VulkanProject")
 
 find_package(Vulkan REQUIRED)
 
-include(${CMAKE_BINARY_DIR}/conanbuildinfo.cmake)
-conan_basic_setup(TARGETS)
+include(cmake/conan_setup.cmake)
 
 # Include sub-projects.
 add_subdirectory("src")

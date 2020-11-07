@@ -1,6 +1,7 @@
 #include "VulkanRenderer.h"
 
 #include <array>
+#include <cstring>
 #include <iostream>
 #include <stdexcept>
 #include <vector>
@@ -1133,7 +1134,7 @@ void VulkanRenderer::updateUniformBuffers(uint32_t imageIndex)
 {
 	void* data;
 	vkMapMemory(mainDevice.logicalDevice, vpUniformBufferMemory[imageIndex], 0, sizeof(UboViewProjection), 0, &data);
-	memcpy(data, &uboViewProjection, sizeof(UboViewProjection));
+	std::memcpy(data, &uboViewProjection, sizeof(UboViewProjection));
 	vkUnmapMemory(mainDevice.logicalDevice, vpUniformBufferMemory[imageIndex]);
 
 	//for (auto i = 0u; i < meshList.size(); ++i) {
@@ -1142,7 +1143,7 @@ void VulkanRenderer::updateUniformBuffers(uint32_t imageIndex)
 	//}
 
 	//vkMapMemory(mainDevice.logicalDevice, modelDUniformBufferMemory[imageIndex], 0, modelUniformAlignment * meshList.size(), 0, &data);
-	//memcpy(data, modelTransferSpace, modelUniformAlignment * meshList.size());
+	//std::memcpy(data, modelTransferSpace, modelUniformAlignment * meshList.size());
 	//vkUnmapMemory(mainDevice.logicalDevice, modelDUniformBufferMemory[imageIndex]);
 }
 
@@ -1503,7 +1504,7 @@ int VulkanRenderer::createTextureImage(const std::string& fileName)
 
 	void* data;
 	vkMapMemory(mainDevice.logicalDevice, imageStagingBufferMemory, 0, imageSize, 0, &data);
-	memcpy(data, imageData, static_cast<size_t>(imageSize));
+	std::memcpy(data, imageData, static_cast<size_t>(imageSize));
 	vkUnmapMemory(mainDevice.logicalDevice, imageStagingBufferMemory);
 
 	stbi_image_free(imageData);

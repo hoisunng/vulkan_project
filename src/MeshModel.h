@@ -13,7 +13,7 @@ public:
 	size_t getMeshCount() const;
 	const Mesh* getMesh(size_t index) const;
 
-	glm::mat4 getModel() const;
+	const glm::mat4& getModel() const;
 	void setModel(glm::mat4 newModel);
 
 	void destroyMeshModel();
