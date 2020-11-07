@@ -6,7 +6,7 @@ env:
   # Customize the CMake build type here (Release, Debug, RelWithDebInfo, etc.)
   BUILD_TYPE: Release
   VULKAN_VERSION: 1.2.154.0
-  VULKAN_SDK_PATH: "${{runner.workspace}}/vulkan_sdk"
+  VULKAN_SDK_PATH: "$GITHUB_WORKSPACE/vulkan_sdk"
 
 jobs:
   build:
