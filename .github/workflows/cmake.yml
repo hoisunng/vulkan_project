@@ -22,8 +22,12 @@ jobs:
     - name: Prepare build environment
       shell: bash
       run: |
+        wget -qO - http://packages.lunarg.com/lunarg-signing-key-pub.asc | sudo apt-key add -
+        sudo wget -qP /etc/apt/sources.list.d http://packages.lunarg.com/vulkan/lunarg-vulkan-focal.list
+        sudo apt-get update
         sudo apt-get install -y \
           ninja-build \
+          vulkan-sdk \
           libgl-dev \
           xorg-dev \
           libx11-dev \
@@ -46,14 +50,14 @@ jobs:
         conan profile new default --detect
         conan profile update settings.compiler.libcxx=libstdc++11 default
 
-    - name: Install Vulkan
-      run: |
-        # Download Vulkan SDK
-        curl -LS -o vulkansdk.tar.gz \
-          https://sdk.lunarg.com/sdk/download/${{env.VULKAN_VERSION}}/linux/vulkansdk-linux-x86_64-${{env.VULKAN_VERSION}}.tar.gz
-        # Create Vulkan SDK directory and extract
-        mkdir "${{env.VULKAN_SDK_PATH}}"
-        tar xfz vulkansdk.tar.gz -C "${{env.VULKAN_SDK_PATH}}"
+#     - name: Install Vulkan
+#       run: |
+#         # Download Vulkan SDK
+#         curl -LS -o vulkansdk.tar.gz \
+#           https://sdk.lunarg.com/sdk/download/${{env.VULKAN_VERSION}}/linux/vulkansdk-linux-x86_64-${{env.VULKAN_VERSION}}.tar.gz
+#         # Create Vulkan SDK directory and extract
+#         mkdir "${{env.VULKAN_SDK_PATH}}"
+#         tar xfz vulkansdk.tar.gz -C "${{env.VULKAN_SDK_PATH}}"
 
     - name: Configure CMake
       # Use a bash shell so we can use the same syntax for environment variable
